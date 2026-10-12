@@ -1,0 +1,98 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Marvel Chat Simulator</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#101116;color:#eee;font-family:Arial,sans-serif}
+header{padding:18px;background:#191a22;border-bottom:1px solid #333}
+header h2{margin:0 0 8px;color:#d5c4ff}
+header p{margin:0;color:#aaa;font-size:13px}
+nav{display:flex;gap:8px;padding:12px;background:#191a22}
+nav button{flex:1;padding:12px 5px;border:1px solid #454552;border-radius:10px;background:#292a35;color:#ddd}
+nav button.active{background:#5d477e;color:white}
+#chat{height:calc(100dvh - 220px);min-height:280px;overflow-y:auto;padding:16px}
+.notice{text-align:center;color:#888;font-size:12px;margin:10px}
+.msg{margin:15px 0;max-width:88%}
+.name{font-size:12px;color:#c6a8ff;margin-bottom:5px}
+.bubble{background:#292a35;padding:11px 13px;border-radius:5px 14px 14px 14px;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere}
+.mine{margin-left:auto}
+.mine .name{text-align:right;color:#8ecbff}
+.mine .bubble{background:#304b68;border-radius:14px 5px 14px 14px}
+footer{position:fixed;bottom:0;left:0;right:0;padding:12px;background:#191a22;border-top:1px solid #333;display:flex;gap:8px;padding-bottom:max(12px,env(safe-area-inset-bottom))}
+input{flex:1;min-width:0;background:#292a35;border:1px solid #454552;border-radius:12px;padding:13px;color:white;font-size:15px}
+footer button{border:0;border-radius:12px;background:#9b7bd1;color:white;padding:0 18px;font-size:15px}
+</style>
+</head>
+<body>
+<header>
+<h2>✦ MARVEL · CHATROOM</h2>
+<p>一场尚未结束的纽约故事</p>
+</header>
+<nav>
+<button id="groupBtn" class="active" onclick="switchChat('group')">群聊</button>
+<button id="lokiBtn" onclick="switchChat('loki')">私聊 · Loki</button>
+</nav>
+<div id="chat">
+<div class="notice">— 巧克力失窃案调查及家庭宴会筹备组 —</div>
+</div>
+<footer>
+<input id="message" placeholder="输入消息……" autocomplete="off">
+<button onclick="send()">发送</button>
+</footer>
+<script>
+let mode="group";
+const chat=document.getElementById("chat");
+const historyData={group:[],loki:[]};
+function add(name,text,mine=false){
+ const box=document.createElement("div");
+ box.className="msg"+(mine?" mine":"");
+ const n=document.createElement("div");n.className="name";n.textContent=name;
+ const b=document.createElement("div");b.className="bubble";b.textContent=text;
+ box.append(n,b);chat.append(box);chat.scrollTop=chat.scrollHeight;
+}
+function switchChat(m){
+ mode=m;
+ document.getElementById("groupBtn").classList.toggle("active",m==="group");
+ document.getElementById("lokiBtn").classList.toggle("active",m==="loki");
+ chat.replaceChildren();
+ const note=document.createElement("div");note.className="notice";
+ note.textContent=m==="group"?"— 巧克力失窃案调查及家庭宴会筹备组 —":"— 私聊 · Loki —";
+ chat.append(note);
+ historyData[m].forEach(x=>add(x.name,x.text,x.mine));
+ if(!historyData[m].length){
+  if(m==="group") add("Tony","好吧，谁能解释一下为什么一个巧克力案件需要建立群聊？");
+  else add("Loki","Well? I trust you haven't summoned me merely to admire my wit.\n（怎么？我希望你找我，不只是为了欣赏我的机智。）");
+ }
+}
+function reply(text){
+ const t=text.toLowerCase();
+ if(mode==="loki"){
+  if(/你好|hi|hello|hey/.test(t))return "Well, well. To what do I owe the pleasure?\n（哟。是什么让我有幸得到你的召见？）";
+  if(/喜欢|爱|love|like/.test(t))return "Careful. Words like those tend to acquire a life of their own.\n（谨慎些。这类话说出口，往往就不再受你控制了。）";
+  if(/托尼|tony|死侍|deadpool/.test(t))return "Must we discuss them? I was rather enjoying the silence.\n（非得谈他们吗？我原本很享受这份安静。）";
+  return "Is that so? Do go on. I'm listening.\n（是吗？继续说。我在听。）";
+ }
+ if(/巧克力|失窃/.test(t))return "Tony：很好，终于有人记得我们正在调查巧克力了。";
+ if(/洛基|loki/.test(t))return "Loki：I heard my name. How predictable.\n（洛基：我听见有人提到我的名字了。真是意料之中。）";
+ if(/索尔|thor/.test(t))return "Thor：若是食物失窃，我愿意协助调查！";
+ if(/死侍|deadpool/.test(t))return "Deadpool：等等，谁把我拉进了一个没有零食的群？";
+ return "Tony：收到。有人有更靠谱的线索吗？";
+}
+function send(){
+ const input=document.getElementById("message");
+ const text=input.value.trim();if(!text)return;
+ historyData[mode].push({name:"Raven",text,mine:true});
+ add("Raven",text,true);input.value="";
+ const answer=reply(text);
+ historyData[mode].push({name:mode==="loki"?"Loki":"群聊",text:answer,mine:false});
+ setTimeout(()=>add(mode==="loki"?"Loki":"群聊",answer),250);
+}
+document.getElementById("message").addEventListener("keydown",e=>{if(e.key==="Enter")send()});
+switchChat("group");
+</script>
+</body>
+</html>
